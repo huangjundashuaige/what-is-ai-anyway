@@ -1,15 +1,36 @@
 var cities = [];
 var cityNum = 150
 var order = [...Array(cityNum).keys()];
-var generationNum = 8000;
+var generationNum = 60000;
 var fitness = [];
-var populationSize = 100;
+var fitness2 = [];
+var populationSize = 30;
 var bestDistance = Infinity;
 var best_solution = order;
+var current_solution = order;
+var currentDistance = Infinity;
 var population = [];
+var newPopulation = [];
 var generationIndex = 1;
+var cross_prob = 0.9;
+var mutate_prob = 0.01;
+
+
+var alpha = 0.8;
+
+var dis_arr = new Array();
+for(var i = 0; i < cityNum; i++) {
+    dis_arr[i] = new Array();
+    for(var j = 0; j < cityNum; j++) {
+        dis_arr[i][j] = Infinity;
+    }
+}
+
+
 
 function initialData() {
+    var test = random(1);
+    print("test "+test);
     cities[0] = createVector(37.4393516691, 541.2090699418);
     cities[1] = createVector(612.1759508571, 494.3166877396);
     cities[2] = createVector(38.1312338227, 353.1484581781);
@@ -170,7 +191,7 @@ function setup() {
     //////////////test
     var bst = [ 0, 97, 102, 81, 94, 106, 4, 99, 142, 96, 145, 25, 74, 17, 141, 84, 64, 131, 136, 49, 54, 57, 140, 82, 55, 89, 45, 91, 53, 137, 133, 130, 31, 22, 37, 66, 42, 108, 50, 19, 24, 109, 80, 28, 85, 134, 69, 107, 101, 113, 98, 18, 1, 36, 5, 27, 8, 41, 119, 46, 138, 39, 52, 117, 23, 11, 115, 100, 40, 56, 38, 126, 68, 35, 60, 10, 147, 129, 16, 65, 59, 139, 116, 128, 26, 30, 122, 73, 12, 105, 90, 118, 67, 127, 44, 70, 43, 63, 111, 135, 144, 143, 48, 146, 71, 79, 13, 121, 76, 132, 14, 77, 20, 149, 114, 3, 103, 21, 124, 148, 61, 2, 112, 9, 93, 87, 120, 78, 58, 15, 110, 104, 32, 125, 51, 92, 123, 34, 95, 88, 7, 6, 83, 29, 62, 47, 72, 75, 33, 86]; 
         
-    var bst_distance = calDistance(cities, bst);
+    var bst_distance = calDistance2(cities, bst);
     console.log("bst: " + bst_distance);
             
     // 先做一个局部搜索
@@ -181,6 +202,12 @@ function setup() {
         population[i] = shuffle(order);
         console.log(i);
     }
+
+    calculateTwoCityDistance();
+
+    //greedy to generate some solutions
+    //greedy();
+    
 
    
 }
@@ -216,7 +243,7 @@ function draw() {
     beginShape();
     textSize(64);
     var s = '';
-    s += "Best distance: " + bestDistance;
+    s += "best distance: " + bestDistance;
     
     fill(255);
     text(s, 8, 780);
@@ -233,7 +260,7 @@ function draw() {
 
         calculateFitness();      // 计算每个个体的适应值  1/(d+1)  距离越短适应值越高
         normalized();     // 将适应值转变为概率
-        getNextGeneration();        // 产生下一代
+        newgetNextGeneration();        // 产生下一代
         generationIndex++;
     
     }
@@ -259,7 +286,7 @@ function two_opt() {
             tmp = left.concat(mid);
             tmp = tmp.concat(right);
         
-            var now_distance = calDistance(cities, tmp);
+            var now_distance = calDistance2(cities, tmp);
             if(now_distance < bestDistance) {
                 bestDistance = now_distance;
                 best_solution = tmp;
